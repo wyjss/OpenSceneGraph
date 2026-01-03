@@ -400,9 +400,23 @@ bool Dragger::handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& 
                     {
                         _pointer.addIntersection(hitr->nodePath, hitr->getLocalIntersectPoint());
                     }
-                    for (osg::NodePath::iterator itr = _pointer._hitList.front().first.begin();
-                            itr != _pointer._hitList.front().first.end();
-                            ++itr)
+#if 0
+# if 0
+					for (osg::NodePath::iterator itr = _pointer._hitList.back().first.begin();
+						itr != _pointer._hitList.back().first.end();
+						++itr)
+# else
+                    auto itr_list = _pointer._hitList.begin();
+					if (_pointer._hitList.size() > 1) {
+                        ++itr_list;
+						++_pointer._hitIter;
+					}
+					for (osg::NodePath::iterator itr = itr_list->first.begin();
+						itr != itr_list->first.end();
+						++itr)
+# endif
+                    
+                    
                     {
                         osgManipulator::Dragger* dragger = dynamic_cast<osgManipulator::Dragger*>(*itr);
                         if (dragger)
@@ -435,7 +449,48 @@ bool Dragger::handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& 
                             }
                         }
                     }
+#else
+                    bool got = false;
+					for (auto itr_hitList = _pointer._hitList.begin(); itr_hitList != _pointer._hitList.end(); ++itr_hitList) {
+                        if(got) break;
+						for (auto itr = itr_hitList->first.begin(); itr != itr_hitList->first.end(); ++itr) {
+                             if(got) break;
+							osgManipulator::Dragger* dragger = dynamic_cast<osgManipulator::Dragger*>(*itr);
+							if (dragger)
+							{
+								if (dragger == this)
+								{
+                                    got = true;
+									osg::Camera* rootCamera = view->getCamera();
+									osg::NodePath nodePath = itr_hitList->first;
+									osg::NodePath::reverse_iterator ritr;
+									for (ritr = nodePath.rbegin();
+										ritr != nodePath.rend();
+										++ritr)
+									{
+										osg::Camera* camera = (*ritr)->asCamera();
+										if (camera && (camera->getReferenceFrame() != osg::Transform::RELATIVE_RF || camera->getParents().empty()))
+										{
+											rootCamera = camera;
+											break;
+										}
+									}
+                                    _pointer._hitIter = itr_hitList;
+									_pointer.setCamera(rootCamera);
+									_pointer.setMousePosition(ea.getX(), ea.getY());
+
+									if (dragger->handle(_pointer, ea, aa))
+									{
+										dragger->setDraggerActive(true);
+										handled = true;
+									}
+								}
+							}
+						}
+					}
+#endif
                 }
+
                 break;
             }
             case osgGA::GUIEventAdapter::DRAG:
@@ -443,7 +498,8 @@ bool Dragger::handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& 
             {
                 if (_draggerActive)
                 {
-                    _pointer._hitIter = _pointer._hitList.begin();
+                    //_pointer._hitIter = _pointer._hitList.begin();
+                    //if (_pointer._hitList.size() > 1) ++_pointer._hitIter;
 //                    _pointer.setCamera(view->getCamera());
                     _pointer.setMousePosition(ea.getX(), ea.getY());
 
