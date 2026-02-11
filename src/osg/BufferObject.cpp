@@ -118,7 +118,11 @@ void GLBufferObject::clear()
     _bufferEntries.clear();
     _dirty = true;
 }
-
+#include <atomic>
+#include <iostream>
+#include <thread>
+#include <chrono>
+#include <mutex>
 void GLBufferObject::compileBuffer()
 {
     _dirty = false;
@@ -286,6 +290,39 @@ void GLBufferObject::compileBuffer()
             }
         }
     }
+#if 0
+	struct _debug_rep_count {
+		int count(void* p) {
+			std::unique_lock<std::mutex> lock(m_mutex);
+			if (m_map.count(p) == 0) {
+				m_map[p] = 1;
+				return 1;
+			} else {
+				int c = m_map[p] + 1;
+				m_map[p] = c;
+				return c;
+			}
+		}
+
+	private:
+		std::mutex m_mutex;
+		std::map<void*, int> m_map;
+	};
+    static _debug_rep_count s_countRep;
+    int repC = s_countRep.count(this);
+    if (repC > 1) {
+      //  std::cout << "count " << this << ", " << repC << "\n";
+    }
+	static std::atomic_int64_t s_count = 0;
+	static std::atomic_int64_t s_size = 0;
+    s_size += newTotalSize;
+	auto c = s_count.fetch_add(1);
+	auto s = s_size.load();
+	if (c % 10 == 0) {
+		std::cout << "compileBuffer count " << c << ", size " << s << ", t:" << std::this_thread::get_id() << "\n";
+	}
+	//std::this_thread::sleep_for(std::chrono::milliseconds(1));
+#endif
 }
 
 void GLBufferObject::commitDMA(unsigned int entryidx)

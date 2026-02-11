@@ -273,6 +273,8 @@ class OSG_EXPORT CullSettings
 template<class matrix_type, class value_type>
 bool clampProjectionMatrix(matrix_type& projection, double& znear, double& zfar, value_type nearFarRatio)
 {
+    //OSG_FATAL << "nearFarRatio:" << nearFarRatio << "\n";
+    //nearFarRatio /= 10.0;
     double epsilon = 1e-6;
     if (zfar<znear-epsilon)
     {

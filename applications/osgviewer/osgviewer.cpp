@@ -33,6 +33,38 @@
 
 #include <iostream>
 
+class GL3RealizeOperation : public osg::Operation {
+
+public:
+	void operator()(osg::Object* object)
+	{
+		osg::GraphicsContext* gc = dynamic_cast<osg::GraphicsContext*>(object);
+		if (gc)
+		{
+			osg::State* state = gc->getState();
+
+			// force NVIDIA-style vertex attribute aliasing, since osgEarth
+			// makes use of some specific attribute registers. Later we can
+			// perhaps create a reservation system for this.
+			state->resetVertexAttributeAlias(false);
+
+#ifdef OSG_GL3_AVAILABLE
+			state->setUseModelViewAndProjectionUniforms(true);
+			state->setUseVertexAttributeAliasing(true);
+#endif
+
+#ifndef OSG_GL_FIXED_FUNCTION_AVAILABLE
+			state->setModeValidity(GL_LIGHTING, false);
+			state->setModeValidity(GL_NORMALIZE, false);
+			state->setModeValidity(GL_RESCALE_NORMAL, false);
+			state->setModeValidity(GL_LINE_STIPPLE, false);
+			state->setModeValidity(GL_LINE_SMOOTH, false);
+#endif
+		}
+	}
+};
+
+
 
 int main(int argc, char** argv)
 {
@@ -51,7 +83,7 @@ int main(int argc, char** argv)
     arguments.getApplicationUsage()->addCommandLineOption("--stats","print out load and compile timing stats");
 
     osgViewer::Viewer viewer(arguments);
-
+    viewer.setRealizeOperation(new GL3RealizeOperation);
     unsigned int helpType = 0;
     if ((helpType = arguments.readHelpType()))
     {

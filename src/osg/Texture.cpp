@@ -684,12 +684,16 @@ void TextureObjectSet::discardAllDeletedTextureObjects()
     // just clear the list as there is nothing else we can do with them when discarding them
     _orphanedTextureObjects.clear();
 }
-
+//#include <iostream>
 void TextureObjectSet::flushDeletedTextureObjects(double /*currentTime*/, double& availableTime)
 {
     // OSG_NOTICE<<"TextureObjectSet::flushDeletedTextureObjects(..)"<<std::endl;
 
     {
+        if (this == nullptr) {
+            int a = 0;
+        }
+        //OSG_WARN << "flushDeletedTextureObjects" <<this<< "\n";
         OpenThreads::ScopedLock<OpenThreads::Mutex> lock(_mutex);
         if (!_pendingOrphanedTextureObjects.empty())
         {
@@ -1196,6 +1200,9 @@ void TextureObjectManager::flushDeletedGLObjects(double currentTime, double& ava
         (itr != _textureSetMap.end()) && (availableTime > 0.0);
         ++itr)
     {
+		if ((*itr).second == nullptr) {
+			int a = 0;
+		}
         (*itr).second->flushDeletedTextureObjects(currentTime, availableTime);
     }
 }

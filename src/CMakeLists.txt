@@ -26,6 +26,7 @@ FOREACH( mylibfolder
         osgTerrain
         osgWidget
         osgPresentation
+        osgQt
         osgWrappers/serializers
         osgPlugins
     )
