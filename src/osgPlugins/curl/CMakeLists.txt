@@ -44,5 +44,5 @@ SETUP_PLUGIN(curl)
 
 find_library(CURL_LIBRARY NAMES libcurl_imp curl_imp)
 if(EXISTS ${CURL_LIBRARY})
-  target_link_libraries(${PLUGIN_NAME}  ${CURL_LIBRARY})
+  target_link_libraries(${TARGET_TARGETNAME}  ${CURL_LIBRARY})
 endif()
